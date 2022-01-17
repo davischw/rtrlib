@@ -9,6 +9,12 @@ Source0:        %{name}-%{version}.tar.gz
 BuildRequires:  binutils gcc tar cmake libssh-devel >= 0.5.0 openssl-devel >= 1.0 doxygen
 Requires:       libssh >= 0.5.0 openssl >= 1.0
 
+%if 0%{?fedora} >= 33 || 0%{?rhel} >= 9
+    %global use_cmake_macros 1
+%else
+    %global use_cmake_macros 0
+%endif
+
 %description
 RTRlib is an open-source C implementation of the RPKI/Router Protocol
 client. The library allows one to fetch and store validated prefix origin
@@ -72,10 +78,18 @@ tar xzf %{SOURCE0}
 
 %build
 %cmake -D CMAKE_BUILD_TYPE=Release .
-make %{?_smp_mflags}
+%if %{use_cmake_macros}
+    %cmake_build %{?_smp_mflags}
+%else
+    make %{?_smp_mflags}
+%endif
 
 %install
-%make_install
+%if %{use_cmake_macros}
+    %cmake_install
+%else
+    %make_install
+%endif
 strip $RPM_BUILD_ROOT/usr/lib64/librtr.so.%{version}
 strip $RPM_BUILD_ROOT/usr/bin/rpki-rov
 strip $RPM_BUILD_ROOT/usr/bin/rtrclient
@@ -83,7 +97,11 @@ cp %{_topdir}/BUILD/CHANGELOG %{buildroot}/%{_docdir}/rtrlib/
 cp %{_topdir}/BUILD/LICENSE %{buildroot}/%{_docdir}/rtrlib/
 
 %check
-export LD_LIBRARY_PATH=.; make test
+%if %{use_cmake_macros}
+    export LD_LIBRARY_PATH=.; %cmake_build --target test
+%else
+    export LD_LIBRARY_PATH=.; make test
+%endif
 
 %post -p /sbin/ldconfig
 
