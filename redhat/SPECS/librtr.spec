@@ -69,6 +69,7 @@ allows to validate given IP prefixes and origin ASes.
 %prep
 if [ ! -f %{SOURCE0} ]; then
   # Build Source Tarball first
+  mkdir -p %{_topdir}/SOURCES
   pushd `dirname %_topdir`; tar czf %{SOURCE0} --exclude-vcs --exclude=redhat . ; popd
 fi
 cd %{_topdir}/BUILD
